@@ -1,0 +1,29 @@
+<div style="background-image: url('images/re.jpg');background-repeat: no-repeat;" >
+
+  <h2 class="card-header text-white text-center">Sign Up</h2><br>
+
+<form class="form-sigin" method="post" style="background-color: transparent; text-align: center">
+   {{#each errorMessages}}
+    <div class="alert alert-danger"> 
+            {{this.msg}}
+    </div>
+    {{/each}}
+
+    <input type="text" class="form-control" name="name" require="" placeholder="Name">
+    <br/>
+    <input type="email" class="form-control" name="email" require="" placeholder="Email">
+    <br/>
+    <input type="password" class="form-control" name="password" require="" placeholder="Password">
+    <br/>
+    <input type="password" class="form-control" name="confirmPassword"  require="" placeholder="Confirm Password">
+    <br/>
+
+    <button type="submit" class="btn btn-lg btn-primary btn-block">Sign Up</button>
+    <br/>
+    <h4 class="text-center">or</h4>
+    <br/>
+    <a href="/auth/facebook" class="btn btn-lg btn-success btn-block">Sign up with facebook</a> 
+
+</form>
+
+</div>

@@ -1,0 +1,183 @@
+<div >
+    <div class="row">
+        <div class="col-md-8">
+            <textarea id="code-screen">{{content}}</textarea>
+        </div>
+        <div class="col-md-4" id="chatbox">
+        <div id="video-container">
+            <video autoplay id="second-video"></video>
+            <video autoplay id="my-video" muted="true"></video>
+            <div id="step2">
+                <p>YOUR ID : <span id="my-id">...</span></p>
+                <div class="form-inline">
+                    <input type="text" class="form-control" placeholder="call user id..." id="callto-id">
+                    <a href="#" class="btn btn-sm btn-success" id="make-call">CALL</a>
+                </div>
+            </div>
+
+            <div id="step3">
+                <p>Talk to...<span id="second-id">...</span>
+                <a href="#" class="btn btn-sm btn-danger" id="end-call">END CALL</a>
+                </p>
+            </div>
+        </div>
+        <br>
+        <br>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+            CHAT ROOM
+            <span class="pull-right" id="chatbox-username">
+                {{#if user}}
+                    {{user.name}}
+                {{/if}}
+            </span>
+            </div>
+            <div class="panel-body">
+                <ul class="list-unstyled" style="height : 300px; overflow-y : scroll" id="chatbox-listMessages">
+                </ul>
+            </div>
+            <div class="panel-footer">
+                <div class="input-group">
+                    <input type="text" placeholder="Enter message" class="form-control" id="userMessage">
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-primary" onclick="sendMessage()">SEND</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+</div>
+
+<input type="hidden" value="{{roomId}}" id= "roomId">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/mode/javascript/javascript.min.js"></script>
+<script src="/plugins/ot/ot.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
+
+<script>
+
+var EditorClient = ot.EditorClient;
+var SocketIOAdapter = ot.SocketIOAdapter;
+var CodeMirrorAdapter = ot.CodeMirrorAdapter;
+
+
+var socket = io.connect('http://localhost:3000');
+
+var editor = CodeMirror.fromTextArea(document.getElementById("code-screen"), {
+    lineNumbers : true,
+    theme : "monokai"
+});
+
+var code = $('#code-screen').val();
+var cmClient;
+function init( str, revision , clients, serverAdapter) {
+    if(!code) {
+    editor.setValue(str);
+    }
+    cmClient = window.cmClient = new EditorClient(
+        revision, clients, serverAdapter, new CodeMirrorAdapter(editor)
+    );
+};
+
+socket.on('doc' , function(obj) {
+    init(obj.str, obj.revision, obj.clients, new SocketIOAdapter(socket));
+});
+
+
+var username = $("#chatbox-username").val();
+if(username === "") 
+{
+    var userId = Math.floor(Math.random()*9999).toString();
+    username = "User" + userId;
+    $("#chatbox-username").text(username);
+}
+
+var roomId = $('#roomId').val();
+socket.emit('joinRoom' , {room : roomId, username : username});
+
+
+var userMessage = function(name,text) {
+    return('<li class="media"> <div class="media-body"> <div class="media">' + 
+        '<div class="media-body"' +
+        '<b>' + name + '</b> : ' + text +
+        '<hr/> </div></div></div></li>' 
+    );
+}
+
+var sendMessage = function() {
+    var userMessage = $('#userMessage').val()
+    socket.emit('chatMessage', {message : userMessage , username : username});
+    $('#userMessage').val("");
+};
+
+
+socket.on('chatMessage' , function(data) {
+    $('#chatbox-listMessages').append(userMessage(data.username, data.message));
+});
+
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+var peer = new Peer(username + roomId , {key : 'lwjd5qra8257b9'});
+
+$(function() {
+    $('#make-call').click(function(){
+        var call = peer.call($('#callto-id').val(), window.localStream);
+        step3(call);
+    });
+    $('#end-call').click(function() {
+        window.existingCall.close();
+        step2();
+    });
+    $('#step1-retry').click(function(){
+        $('#step1-error').hide();
+        step1();
+    });
+    step1();
+});
+
+peer.on('open', function() {
+    $('#my-id').text(peer.id);
+});
+
+peer.on('call' , function(call) {
+    call.answer(window.localStream);
+    step3(call);
+});
+
+peer.on('error', function(err) {
+    alert(err.message);
+    step2();
+});
+
+function step1() {
+    navigator.getUserMedia({ audio : true , video: true}, function(stream) {
+        $('#my-video').prop('srcObject', stream);
+        window.localStream = stream;
+        step2();
+    }, function() { $('#step1-error').show(); });
+}
+
+function step2() {
+    $('#step1, #step3').hide();
+    $('#step2').show();
+}
+
+function step3(call) {
+    if(window.existingCall) {
+        window.existingCall.close();
+    }
+    call.on('stream' , function(stream) {
+        $('#second-video').prop('srcObject' ,stream);
+    });
+    window.existingCall = call;
+    $('#second-id').text(call.peer);
+    call.on('close', step2);
+    $('#step1, #step2').hide();
+    $('#step3').show();
+ }
+
+</script>
