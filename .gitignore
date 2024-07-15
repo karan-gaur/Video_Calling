@@ -1,0 +1,61 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Node specific
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+jspm_packages/
+
+# Typescript v1 declaration files
+typings/
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# dotenv environment variables file
+.env
+.env.*
+
+
+# MongoDB data files
+data/
+*.lock
+
+# Ignore the directory where the MongoDB server stores data
+/data/db/
+
+# Ignore the directory where MongoDB stores log files
+/logs/
+
+# Ignore dump files created by MongoDB
+dump/
+
+# Optional eslint cache
+.eslintcache
+
+# Misc
+.DS_Store
+Thumbs.db
